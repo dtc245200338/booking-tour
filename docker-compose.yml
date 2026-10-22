@@ -152,6 +152,35 @@ services:
     security_opt: ["no-new-privileges:true"]
     mem_limit: 384m
 
+  # ---------- LOG TẬP TRUNG ----------
+  loki:
+    image: grafana/loki:3.2.0
+    container_name: tour_loki
+    restart: unless-stopped
+    command: ["-config.file=/etc/loki/loki.yml"]
+    volumes:
+      - ./loki/loki.yml:/etc/loki/loki.yml:ro
+      - loki_data:/loki
+    networks: [monitoring]
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    mem_limit: 384m
+
+  promtail:
+    image: grafana/promtail:3.2.0
+    container_name: tour_promtail
+    restart: unless-stopped
+    command: ["-config.file=/etc/promtail/promtail.yml"]
+    user: "10001"
+    group_add: ["${DOCKER_GID}"]
+    volumes:
+      - ./promtail/promtail.yml:/etc/promtail/promtail.yml:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks: [monitoring]
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    mem_limit: 128m
+
 networks:
   frontend:
   backend:
@@ -167,3 +196,4 @@ volumes:
   pgadmin_data:
   prometheus_data:
   grafana_data:
+  loki_data:
