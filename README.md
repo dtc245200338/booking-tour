@@ -8,7 +8,7 @@ Website đặt tour du lịch (tour, lịch trình, khách hàng, booking).
 
 ## Chạy hệ thống
 ```bash
-git clone git@github.com:MSSV_CUA_BAN/booking-tour.git && cd booking-tour
+git clone git@github.com:dtc245200338/booking-tour.git && cd booking-tour
 cp .env.example .env            # sửa mật khẩu mạnh
 ./scripts/gen-cert.sh           # tạo chứng chỉ HTTPS tự ký
 docker compose up -d --build
@@ -37,8 +37,6 @@ Host `db` · Port `5432` · DB `tourdb` · User `tour_admin` · Password trong `
 
 
 ## Giám sát trên Docker Desktop và WSL 2
-
-Prometheus: http://localhost:9090 — Grafana: http://localhost:3000.
 
 Dùng cAdvisor 0.55.1 với `cgroup: host` và socket containerd của Docker Desktop.
 Không gắn `/sys` hoặc toàn bộ `/var/run` từ Ubuntu vì có thể che cgroup hoặc socket
@@ -70,3 +68,13 @@ rate(container_cpu_usage_seconds_total{name=~"tour_.*"}[2m]) * 100
 Volume runtime chỉ đọc vẫn cung cấp kết nối API mạnh cho cAdvisor; chỉ dùng trong
 môi trường thực hành có kiểm soát. Chưa dùng các cấu hình này làm bằng chứng đã
 giám sát thành công cho đến khi trang Targets và truy vấn thực tế có dữ liệu.
+
+## Giám sát (Prometheus + Grafana)
+| Dịch vụ | URL |
+|---|---|
+| Prometheus | http://localhost:9090 |
+| Grafana | http://localhost:3000 (admin / `GRAFANA_PASSWORD` trong `.env`) |
+
+- cAdvisor: metrics container · nginx-exporter: metrics web server · postgres-exporter: metrics database
+- Dashboard: RAM/CPU theo container, Nginx, PostgreSQL
+- Mạng `monitoring` là internal, không truy cập từ Internet
