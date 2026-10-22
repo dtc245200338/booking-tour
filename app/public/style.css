@@ -1,0 +1,12 @@
+*{box-sizing:border-box}body{font-family:system-ui,sans-serif;margin:0;background:#f4f7fb;color:#222}
+header{background:#0b6e99;color:#fff;padding:24px;text-align:center}
+main{max-width:1000px;margin:24px auto;padding:0 16px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:16px}
+.card{background:#fff;border-radius:10px;padding:16px;box-shadow:0 2px 6px #0002}
+.price{color:#d9480f;font-weight:700}
+button{background:#0b6e99;color:#fff;border:0;border-radius:6px;padding:10px 14px;cursor:pointer}
+button.link{background:none;color:#0b6e99;padding:0;margin-bottom:12px}
+form{display:grid;gap:10px;max-width:420px}label{display:grid;gap:4px;font-weight:600}
+input,select{padding:8px;border:1px solid #bbb;border-radius:6px}
+#detail{background:#fff;padding:20px;border-radius:10px}
+.ok{color:#2b8a3e;font-weight:700}.err{color:#c92a2a;font-weight:700}

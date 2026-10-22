@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Booking Tour - Đặt tour du lịch</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <header><h1>🌏 Booking Tour</h1><p>Đặt tour du lịch nhanh chóng</p></header>
+  <main>
+    <section id="tours" class="grid"></section>
+    <section id="detail" hidden>
+      <button id="back" class="link">← Quay lại danh sách</button>
+      <h2 id="d-name"></h2>
+      <p id="d-info"></p>
+      <h3>Lịch trình</h3>
+      <ol id="d-itin"></ol>
+      <h3>Đặt tour</h3>
+      <form id="form">
+        <label>Ngày khởi hành <select id="schedule" required></select></label>
+        <label>Họ tên <input id="full_name" required maxlength="100"></label>
+        <label>Email <input id="email" type="email" required></label>
+        <label>Số điện thoại <input id="phone" maxlength="20"></label>
+        <label>Số người <input id="num_people" type="number" min="1" max="20" value="1" required></label>
+        <button type="submit">Xác nhận đặt tour</button>
+      </form>
+      <p id="msg"></p>
+    </section>
+  </main>
+  <script src="/app.js"></script>
+</body>
+</html>
