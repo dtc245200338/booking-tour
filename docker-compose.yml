@@ -11,6 +11,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       APP_DB_USER: ${APP_DB_USER}
       APP_DB_PASSWORD: ${APP_DB_PASSWORD}
+      EXPORTER_DB_PASSWORD: ${EXPORTER_DB_PASSWORD}
     volumes:
       - pgdata:/var/lib/postgresql/data
       - ./db/init:/docker-entrypoint-initdb.d:ro
@@ -30,7 +31,7 @@ services:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
     ports:
-      - "127.0.0.1:5050:8080"      # chỉ mở cho máy local
+      - "127.0.0.1:5050:8080"
     volumes:
       - pgadmin_data:/var/lib/pgadmin
     depends_on:
@@ -68,15 +69,101 @@ services:
       - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
       - ./nginx/certs:/etc/nginx/certs:ro
     depends_on: [app]
-    networks: [frontend]
+    networks: [frontend, monitoring]
     cap_drop: [ALL]
     security_opt: ["no-new-privileges:true"]
+
+  # ---------- GIÁM SÁT ----------
+  cadvisor:
+    image: ghcr.io/google/cadvisor:0.55.1
+    container_name: tour_cadvisor
+    restart: unless-stopped
+    command: ["--docker_only=true", "--housekeeping_interval=15s", "--containerd=/run/containerd/containerd.sock"]
+    privileged: true
+    cgroup: host
+    volumes:
+      - cadvisor_containerd:/run/containerd:ro
+      - /:/rootfs:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /run/docker/containerd/containerd.sock:/run/docker/containerd/containerd.sock:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+    networks: [monitoring]
+    mem_limit: 256m
+
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter:v0.15.0
+    container_name: tour_pg_exporter
+    restart: unless-stopped
+    environment:
+      DATA_SOURCE_NAME: "postgresql://exporter:${EXPORTER_DB_PASSWORD}@db:5432/${POSTGRES_DB}?sslmode=disable"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks: [backend, monitoring]
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    mem_limit: 128m
+
+  nginx-exporter:
+    image: nginx/nginx-prometheus-exporter:1.3.0
+    container_name: tour_nginx_exporter
+    restart: unless-stopped
+    command: ["--nginx.scrape-uri=http://nginx:8081/stub_status"]
+    depends_on: [nginx]
+    networks: [monitoring]
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    mem_limit: 64m
+
+  prometheus:
+    image: prom/prometheus:v2.54.1
+    container_name: tour_prometheus
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.retention.time=7d
+    ports:
+      - "127.0.0.1:9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    networks: [frontend, monitoring]
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    mem_limit: 512m
+
+  grafana:
+    image: grafana/grafana:11.2.0
+    container_name: tour_grafana
+    restart: unless-stopped
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_ANALYTICS_REPORTING_ENABLED: "false"
+    ports:
+      - "127.0.0.1:3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+    depends_on: [prometheus]
+    networks: [frontend, monitoring]
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    mem_limit: 384m
 
 networks:
   frontend:
   backend:
-    internal: true     # DB nằm trong mạng nội bộ, không ra Internet
+    internal: true
+  monitoring:
+    internal: true
 
 volumes:
+  cadvisor_containerd:
+    external: true
+    name: booking-tour_cadvisor_containerd_desktop
   pgdata:
   pgadmin_data:
+  prometheus_data:
+  grafana_data:
